@@ -66,7 +66,7 @@ RCT_DATA <- data.frame(Y, D, Y0, Y1, X, X1, X2, X3, X4, X5)
 
 
 # CHECK THAT D IS INDEPENDENT OF X, Y0, Y1 (RECALL Y0,Y1 NOT OBSERVED IN REALITY)
-# "TEST" OF COVARIATE BALANCE
+# "TEST" OF COVARIATE BALANCE * should be that mean of Y0 =  ... group.test provides f-test
 sumtable(RCT_DATA, vars=c('Y0','Y1', 'X1', 'X2', 'X3', 'X4', 'X5'), group='D', group.test=TRUE)
 
 mA <- lm(formula = X ~ D, data=RCT_DATA)
