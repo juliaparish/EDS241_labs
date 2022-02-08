@@ -6,7 +6,7 @@ library(estimatr)
 library(dplyr)
 library(tidyr)
 
-set.seed(7307)
+set.seed(689)
 
 bigN=20000
 
