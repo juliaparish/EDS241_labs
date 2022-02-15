@@ -16,8 +16,8 @@ stargazer(cgl, type="text", digits=2)
 # collapse should be 0 thru 1; 27%
 # year only 2003
 # DAPever - ITQ
-# DAPever - 
-# LME - approx. 
+# DAPimp - ??
+# LME - type of large marine ecosystem (1-60) 
 # genus/species - numerics don't make a lot of sense
 
 # EXAMINE BALANCE IN COVARIATES

@@ -1,0 +1,91 @@
+---
+title: "IVR lab"
+author: "Julia Parish"
+date: "2/10/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message = FALSE}
+library(stargazer)
+library(estimatr)
+library(AER) 
+library(ggplot2)
+library(cowplot)
+library(sandwich)
+library(lmtest)
+library(dplyr)
+library(lfe) # https://cran.r-project.org/web/packages/lfe/lfe.pdf
+library(here)
+```
+
+```{r}
+
+# IMPORT CSV DATA
+FULTON <- read.csv(here("data/FULTON.csv")) %>%
+  mutate(log_tots = log(tots), # total sales
+         log_price = log(pricelevel)) # log total price
+
+# SUMMARY STATISTICS
+stargazer(FULTON, type="text", digits=2)
+```
+
+```{r}
+# BASIC OLS REGRESSION
+# log price is continuous, not binary
+ols <- lm(formula = log_tots ~ log_price, data=FULTON)
+
+summary(ols)
+```
+# log_price interpretation: if the price was to go up by 1% then the quantity sold drops by 0.6%; y goes down by 0.6% then intercept isn't interpretable. Intercept is only interpretable if dummy 
+
+
+# what is the effect of windspeed on the price of fish? 
+```{r}
+# FIRST_STAGE REGRESSION - JUST-IDENTIFIED MODEL
+fs1 <- lm(formula = log_price ~ windspd, data=FULTON)
+summary(fs1)
+```
+
+# a 1m increase in windspeed increases the price of fish by 0.7% but does effect the demand of fish
+# reject pi1 = 0
+
+```{r}
+# TSLS - JUST-IDENTIFIED MODEL
+
+# log quantity on log price, | used to delineate instruments, instrument is windspeed
+tsls1 <- ivreg(log_tots ~ log_price | windspd, data = FULTON) 
+summary(tsls1)
+```
+
+Now -1.4 ; can argue this is not bias by demand forces, the price is influenced by winspeed not demand. 
+
+```{r}
+# Calculate robust standard errors for OLS and FS1 using starprep()
+se_ols_fs1 <- starprep(ols,fs1, stat = c("std.error"), se_type = "HC2", alpha = 0.05) 
+
+# Calculate robust standard errors sandwich and lmtest packages (starprep() does not like ivreg() objects)
+se_tsls11 <- coeftest(tsls1, vcov = vcovHC(tsls1, type = "HC2"))[, "Std. Error"]
+
+# Combine standard errors and output results with stargazer()
+se_models <- append(se_ols_fs1,list(se_tsls11))
+stargazer(ols, fs1, tsls1, se = se_models, type="text")
+```
+
+```{r}
+# Other approach using the lfe package #####################
+# Estimate the first two models
+ols_felm <- felm(formula = log_tots ~ log_price, data=FULTON)
+fs1_felm <- felm(formula = log_price ~ windspd, data=FULTON)
+# Estimate 2SLS
+# "log_tots ~ 1" is not the first stage, it is the all variables in the first stage, BUT the endogenous one
+# | 0 | means that we are not including fixed effects here.
+tsls1_felm <- felm(formula = log_tots ~ 1 | 0 | (log_price ~ windspd),  data=FULTON)
+# The robust standard errors are calculated (not reported) by default in felm(), so here we can fetch and combine them
+# It might be HC1, but the documentation is not great. 
+se_models_felm <- list(ols_felm$rse,fs1_felm$rse, tsls1_felm$rse)
+stargazer(ols_felm, fs1_felm, tsls1_felm, se = se_models_felm, type="text")
+```
