@@ -60,6 +60,7 @@ ps_model <- glm(DAPever ~ LME + genus, family = binomial(), data = cgl)
 
 summary(ps_model)
 
+#estimated propensity score, wgt is 
 EPS <- predict(ps_model, type = "response") # est. logistic equation to create new variable est. propensity score
 PS_WGT <- (cgl$DAPever/EPS) + ((1-cgl$DAPever)/(1-EPS))
 
