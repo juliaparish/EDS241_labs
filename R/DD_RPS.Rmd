@@ -31,6 +31,7 @@ RPS <- read.csv(here("data/RPS_data.csv"))
 ```{r}
 stargazer(RPS, type="text", digits=2)
 ```
+*will be on FINAL*
 
 # LIST SOME VARIABLES FOR CALIFORNIA
 
@@ -44,15 +45,20 @@ RPS%>%
 # DD REGRESSION, Y = Wind+Solar installed capacity (MW), using lm package
 
 ```{r}
+#lm package due to not having a number of factors
 DD_cap1 <- lm(formula = cap_WS_mw ~ rps_D + as.factor(state_name) + as.factor(year), data=RPS)
+# calculating standard errors w/o cluster robust
 se_DD_cap1 <- starprep(DD_cap1, stat = c("std.error"), se_type = "HC2", alpha = 0.05) 
 
 DD_cap2 <- lm(formula = cap_WS_mw ~ rps_D + as.factor(state_name) + as.factor(year), data=RPS)
+# calculating standard errors w/ cluster robust
 se_DD_cap2 <- starprep(DD_cap2, stat = c("std.error"), se_type = "CR2", clusters=RPS$state_name, alpha = 0.05) 
 
 se_models <- list(se_DD_cap1[[1]], se_DD_cap2[[1]])
 stargazer(DD_cap1, DD_cap2, se = se_models, keep=c("rps_D"), type="text")
 ```
+
+### Col 1: beta1 increase renewable energt capacity by 546 mg w/ se: 128, 3 stars, 
 
 # DD REGRESSION, Y = Wind+Solar generation (GWh), using plm package
 
@@ -79,4 +85,4 @@ se_DD_gen1 <- list(se_DD_gen1)
 stargazer(DD_gen1, keep=c("rps_D"), se = se_DD_gen1, type="text")
 ```
 
-
+# rps have increased renewable energy sources by 2,387 mw
